@@ -53,6 +53,26 @@ public struct Swap: Codable {
 public struct Pressure: Codable {
     let level: Int
     let value: RAMPressure
+    let percent: Int
+
+    init(level: Int, value: RAMPressure, percent: Int) {
+        self.level = level
+        self.value = value
+        self.percent = percent
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case level
+        case value
+        case percent
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.level = try container.decode(Int.self, forKey: .level)
+        self.value = try container.decode(RAMPressure.self, forKey: .value)
+        self.percent = try container.decodeIfPresent(Int.self, forKey: .percent) ?? 0
+    }
 }
 
 public class RAM: Module {
@@ -229,6 +249,7 @@ public class RAM: Module {
                         switch pair.value {
                         case "level": replacement = "\(value.pressure.level)"
                         case "value": replacement = value.pressure.value.rawValue
+                        case "percent": replacement = "\(value.pressure.percent)%"
                         default: return
                         }
                     default: return

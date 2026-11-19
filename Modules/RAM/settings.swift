@@ -39,6 +39,7 @@ You can use a combination of any of the variables.
 <li><b>$swap.free</b>: <small>Free swap memory.</small></li>
 <li><b>$pressure.value</b>: <small>Pressure value (normal, warning, critical).</small></li>
 <li><b>$pressure.level</b>: <small>Pressure level (1, 2, 4).</small></li>
+<li><b>$pressure.percent</b>: <small>System-wide memory used percentage.</small></li>
 </ul>
 """
 

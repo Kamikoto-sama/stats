@@ -61,6 +61,11 @@ internal class UsageReader: Reader<RAM_Usage> {
             var intSize: size_t = MemoryLayout<uint>.size
             var pressureLevel: Int = 0
             sysctlbyname("kern.memorystatus_vm_pressure_level", &pressureLevel, &intSize, nil, 0)
+
+            var pressurePercent: UInt32 = 0
+            _ = withUnsafeMutablePointer(to: &pressurePercent) {
+                memorystatus_get_level(user_addr_t(UInt(bitPattern: $0)))
+            }
             
             var pressureValue: RAMPressure
             switch pressureLevel {
@@ -91,7 +96,7 @@ internal class UsageReader: Reader<RAM_Usage> {
                     used: Double(swap.xsu_used),
                     free: Double(swap.xsu_avail)
                 ),
-                pressure: Pressure(level: pressureLevel, value: pressureValue),
+                pressure: Pressure(level: pressureLevel, value: pressureValue, percent: Int(100 - pressurePercent)),
                 
                 swapins: swapins,
                 swapouts: swapouts
