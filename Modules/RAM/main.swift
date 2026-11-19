@@ -119,10 +119,6 @@ public class RAM: Module {
         return color.additional as! NSColor
     }
     
-    private var textValue: String {
-        Store.shared.string(key: "\(self.name)_textWidgetValue", defaultValue: "$mem.used/$mem.total ($pressure.value)")
-    }
-    
     private var systemWidgetsUpdatesState: Bool {
         self.userDefaults?.bool(forKey: "systemWidgetsUpdates_state") ?? false
     }
@@ -189,7 +185,7 @@ public class RAM: Module {
         self.menuBar.widgets.filter{ $0.isActive }.forEach { (w: SWidget) in
             switch w.item {
             case let widget as Mini:
-                widget.setValue(value.usage)
+                widget.setValue(value.pressure.percentage.map { Double($0) / 100 })
                 widget.setPressure(value.pressure.value)
             case let widget as LineChart:
                 widget.setValue(value.usage)
@@ -224,7 +220,7 @@ public class RAM: Module {
                     ColorValue(value.compressed/total, color: self.compressedColor)
                 ])
             case let widget as TextWidget:
-                var text = "\(self.textValue)"
+                var text = Settings.textWidgetValue(for: self.name)
                 let pairs = TextWidget.parseText(text)
                 pairs.forEach { pair in
                     var replacement: String? = nil
@@ -256,7 +252,6 @@ public class RAM: Module {
                         switch pair.value {
                         case "level": replacement = "\(value.pressure.level)"
                         case "value": replacement = value.pressure.value.rawValue
-                        case "percentage", "percent": replacement = value.pressure.percentage.map { "\($0)%" } ?? "-"
                         default: return
                         }
                     default: return

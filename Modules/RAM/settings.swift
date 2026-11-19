@@ -19,7 +19,6 @@ You can use a combination of any of the variables.
 <ul>
 <li>$mem.used/$mem.total ($pressure.value)</li>
 <li>Pressure: $pressure.value</li>
-<li>Pressure: $pressure.percentage</li>
 <li>Free: $mem.free</li>
 </ul>
 <h2>Available variables</h2>
@@ -40,17 +39,18 @@ You can use a combination of any of the variables.
 <li><b>$swap.free</b>: <small>Free swap memory.</small></li>
 <li><b>$pressure.value</b>: <small>Pressure value (normal, warning, critical).</small></li>
 <li><b>$pressure.level</b>: <small>Pressure level (1, 2, 4).</small></li>
-<li><b>$pressure.percentage</b> (alias: <b>$pressure.percent</b>): <small>Memory pressure percentage (0–100%, or - when unavailable).</small></li>
 </ul>
 """
 
 internal class Settings: NSStackView, Settings_v, NSTextFieldDelegate {
+    private static let defaultTextValue = "$mem.used/$mem.total ($pressure.value)"
+
     private var updateIntervalValue: Int = 1
     private var updateTopIntervalValue: Int = 1
     private var numberOfProcesses: Int = 8
     private var splitValueState: Bool = false
     private var notificationLevel: String = "Disabled"
-    private var textValue: String = "$mem.used/$mem.total ($pressure.value)"
+    private var textValue: String
     private var combinedProcessesState: Bool = false
     
     private let title: String
@@ -61,6 +61,17 @@ internal class Settings: NSStackView, Settings_v, NSTextFieldDelegate {
     public var setTopInterval: ((_ value: Int) -> Void) = {_ in }
     
     private let textWidgetHelpPanel: HelpHUD = HelpHUD(textWidgetHelp)
+
+    static func textWidgetValue(for module: String) -> String {
+        let template = Store.shared.string(key: "\(module)_textWidgetValue", defaultValue: Self.defaultTextValue)
+        guard template.contains("$pressure.percent") else { return template }
+        let updated = template.replacingOccurrences(
+            of: #"\$pressure\.(?:percentage|percent)(?![a-zA-Z0-9_])"#,
+            with: "",
+            options: .regularExpression
+        ).trimmingCharacters(in: .whitespacesAndNewlines)
+        return updated.isEmpty ? Self.defaultTextValue : updated
+    }
     
     public init(_ module: ModuleType) {
         self.title = module.stringValue
@@ -69,7 +80,7 @@ internal class Settings: NSStackView, Settings_v, NSTextFieldDelegate {
         self.numberOfProcesses = Store.shared.int(key: "\(self.title)_processes", defaultValue: self.numberOfProcesses)
         self.splitValueState = Store.shared.bool(key: "\(self.title)_splitValue", defaultValue: self.splitValueState)
         self.notificationLevel = Store.shared.string(key: "\(self.title)_notificationLevel", defaultValue: self.notificationLevel)
-        self.textValue = Store.shared.string(key: "\(self.title)_textWidgetValue", defaultValue: self.textValue)
+        self.textValue = Settings.textWidgetValue(for: self.title)
         self.combinedProcessesState = Store.shared.bool(key: "\(self.title)_combinedProcesses", defaultValue: self.combinedProcessesState)
         
         super.init(frame: NSRect.zero)
