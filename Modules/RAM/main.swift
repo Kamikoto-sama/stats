@@ -53,25 +53,31 @@ public struct Swap: Codable {
 public struct Pressure: Codable {
     let level: Int
     let value: RAMPressure
-    let percent: Int
+    let percentage: Int?
 
-    init(level: Int, value: RAMPressure, percent: Int) {
-        self.level = level
-        self.value = value
-        self.percent = percent
-    }
-
-    enum CodingKeys: String, CodingKey {
+    private enum CodingKeys: String, CodingKey {
         case level
         case value
+        case percentage
+    }
+
+    private enum LegacyCodingKeys: String, CodingKey {
         case percent
+    }
+
+    init(level: Int, value: RAMPressure, percentage: Int?) {
+        self.level = level
+        self.value = value
+        self.percentage = percentage
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.level = try container.decode(Int.self, forKey: .level)
         self.value = try container.decode(RAMPressure.self, forKey: .value)
-        self.percent = try container.decodeIfPresent(Int.self, forKey: .percent) ?? 0
+        let legacyContainer = try decoder.container(keyedBy: LegacyCodingKeys.self)
+        self.percentage = try container.decodeIfPresent(Int.self, forKey: .percentage)
+            ?? legacyContainer.decodeIfPresent(Int.self, forKey: .percent)
     }
 }
 
@@ -177,6 +183,7 @@ public class RAM: Module {
         self.portalView.callback(value)
         self.notificationsView.loadCallback(value)
         self.previewView.loadCallback(value)
+        self.summaryCallback(value.usage)
         
         let total: Double = value.total == 0 ? 1 : value.total
         self.menuBar.widgets.filter{ $0.isActive }.forEach { (w: SWidget) in
@@ -249,7 +256,7 @@ public class RAM: Module {
                         switch pair.value {
                         case "level": replacement = "\(value.pressure.level)"
                         case "value": replacement = value.pressure.value.rawValue
-                        case "percent": replacement = "\(value.pressure.percent)%"
+                        case "percentage", "percent": replacement = value.pressure.percentage.map { "\($0)%" } ?? "-"
                         default: return
                         }
                     default: return

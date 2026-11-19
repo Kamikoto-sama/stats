@@ -67,7 +67,7 @@ public struct HistoryBucket: Codable {
                 self.values[path] = value
             }
         }
-        if bucket.recordedAt >= self.recordedAt {
+        if bucket.recordedAt.timeIntervalSinceReferenceDate >= self.recordedAt.timeIntervalSinceReferenceDate {
             self.recordedAt = bucket.recordedAt
             self.snapshot = bucket.snapshot
         }
@@ -130,18 +130,17 @@ public class DB {
     }
     
     public func insert(key: String, value: Codable, force: Bool = false) {
-        self.queue.sync { self._values[key] = value }
-        guard let blobData = try? JSONEncoder().encode(value), let str = String(data: blobData, encoding: .utf8) else { return }
-        
-        let now = Date()
-        let shouldWrite: Bool = self.queue.sync {
+        let str: String? = self.queue.sync {
+            self._values[key] = value
+            let now = Date()
             if !force, let ts = self._writeTS[key], (now.timeIntervalSince1970-ts.timeIntervalSince1970) < 30 {
-                return false
+                return nil
             }
+            guard let blobData = try? JSONEncoder().encode(value), let str = String(data: blobData, encoding: .utf8) else { return nil }
             self._writeTS[key] = now
-            return true
+            return str
         }
-        guard shouldWrite else { return }
+        guard let str else { return }
         
         self.lldb?.insert(key, value: str)
     }
@@ -193,7 +192,7 @@ public class DB {
                 return
             }
             var values = self.load(key: key, from: start, to: end) ?? [:]
-            for (timestamp, bucket) in self.historyBuckets[key] ?? [:] where timestamp >= start && timestamp < end {
+            for (timestamp, bucket) in self.historyBuckets[key] ?? [:] where timestamp.timeIntervalSinceReferenceDate >= start.timeIntervalSinceReferenceDate && timestamp < end {
                 if values[timestamp] != nil {
                     values[timestamp]?.merge(bucket)
                 } else {
@@ -291,13 +290,13 @@ public class DB {
         let now = Date()
         let cutoff = self.historyMinute(now.addingTimeInterval(-self.historyRetention))
         for key in Array(self.historyBuckets.keys) {
-            self.historyBuckets[key] = self.historyBuckets[key]?.filter{ $0.key >= cutoff }
+            self.historyBuckets[key] = self.historyBuckets[key]?.filter{ $0.key.timeIntervalSinceReferenceDate >= cutoff.timeIntervalSinceReferenceDate }
             if self.historyBuckets[key]?.isEmpty == true {
                 self.historyBuckets.removeValue(forKey: key)
             }
         }
         
-        if let lastCleanup = self.lastHistoryCleanup, now >= lastCleanup, now.timeIntervalSince(lastCleanup) < 15*60 {
+        if let lastCleanup = self.lastHistoryCleanup, now.timeIntervalSinceReferenceDate >= lastCleanup.timeIntervalSinceReferenceDate, now.timeIntervalSince(lastCleanup) < 15*60 {
             return
         }
         if self.prune(before: cutoff) {

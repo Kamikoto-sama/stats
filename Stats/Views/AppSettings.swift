@@ -26,10 +26,6 @@ class ApplicationSettings: NSStackView {
         get { Store.shared.bool(key: "CombinedModules", defaultValue: false) }
         set { Store.shared.set(key: "CombinedModules", value: newValue) }
     }
-    private var combinedModulesIcon: Bool {
-        get { Store.shared.bool(key: "CombinedModules_icon", defaultValue: false) }
-        set { Store.shared.set(key: "CombinedModules_icon", value: newValue) }
-    }
     private var combinedModulesSpacing: String {
         get { Store.shared.string(key: "CombinedModules_spacing", defaultValue: "none") }
         set { Store.shared.set(key: "CombinedModules_spacing", value: newValue) }
@@ -41,6 +37,14 @@ class ApplicationSettings: NSStackView {
     private var combinedModulesPopup: Bool {
         get { Store.shared.bool(key: "CombinedModules_popup", defaultValue: true) }
         set { Store.shared.set(key: "CombinedModules_popup", value: newValue) }
+    }
+    private var combinedModulesAlternateDetails: Bool {
+        get { Store.shared.bool(key: "CombinedModules_alternateDetails", defaultValue: true) }
+        set { Store.shared.set(key: "CombinedModules_alternateDetails", value: newValue) }
+    }
+    private var combinedModulesModifierKeys: [UInt16] {
+        get { Store.shared.array(key: "CombinedModules_modifierKeys", defaultValue: [58]) as? [UInt16] ?? [58] }
+        set { Store.shared.set(key: "CombinedModules_modifierKeys", value: newValue) }
     }
     
     private var systemWidgetsUpdatesState: Bool {
@@ -135,9 +139,10 @@ class ApplicationSettings: NSStackView {
                 action: #selector(self.toggleCombinedModules),
                 state: self.combinedModulesState
             )),
-            PreferencesRow(localizedString("Show icon instead of widgets"), component: switchView(
-                action: #selector(self.toggleCombinedModulesIcon),
-                state: self.combinedModulesIcon
+            PreferencesRow(localizedString("Menu bar"), component: selectView(
+                action: #selector(self.toggleCombinedModulesWidget),
+                items: CombinedModulesWidget.all,
+                selected: CombinedModulesWidget.current.rawValue
             )),
             PreferencesRow(component: self.moduleSelector),
             PreferencesRow(localizedString("Spacing"), component: selectView(
@@ -152,6 +157,15 @@ class ApplicationSettings: NSStackView {
             PreferencesRow(localizedString("Combined details"), component: switchView(
                 action: #selector(self.toggleCombinedModulesPopup),
                 state: self.combinedModulesPopup
+            )),
+            PreferencesRow(localizedString("Alternate details on click"), component: switchView(
+                action: #selector(self.toggleCombinedModulesAlternateDetails),
+                state: self.combinedModulesAlternateDetails
+            )),
+            PreferencesRow(localizedString("Keyboard shortcut"), localizedString("Hold Option or Shift, or both."), component: KeyboardShartcutView(
+                callback: self.setCombinedModulesModifierKeys,
+                value: self.combinedModulesModifierKeys,
+                modifierKeys: [58, 60]
             ))
         ])
         scrollView.stackView.addArrangedSubview(self.combinedModulesView!)
@@ -384,13 +398,16 @@ class ApplicationSettings: NSStackView {
     
     private func updateCombinedModulesSettings() {
         self.combinedModulesView?.setRowVisibility(1, newState: self.combinedModulesState)
-        for row in 2...5 {
-            self.combinedModulesView?.setRowVisibility(row, newState: self.combinedModulesState && !self.combinedModulesIcon)
+        self.combinedModulesView?.setRowVisibility(2, newState: self.combinedModulesState && CombinedModulesWidget.current != .icon)
+        for row in 3...6 {
+            self.combinedModulesView?.setRowVisibility(row, newState: self.combinedModulesState && CombinedModulesWidget.current == .widgets)
         }
+        self.combinedModulesView?.setRowVisibility(7, newState: self.combinedModulesState && CombinedModulesWidget.current == .widgets && self.combinedModulesAlternateDetails)
     }
     
-    @objc private func toggleCombinedModulesIcon(_ sender: NSButton) {
-        self.combinedModulesIcon = sender.state == NSControl.StateValue.on
+    @objc private func toggleCombinedModulesWidget(_ sender: NSMenuItem) {
+        guard let key = sender.representedObject as? String, let widget = CombinedModulesWidget(rawValue: key) else { return }
+        CombinedModulesWidget.current = widget
         self.updateCombinedModulesSettings()
         NotificationCenter.default.post(name: .moduleRearrange, object: nil, userInfo: nil)
     }
@@ -409,6 +426,15 @@ class ApplicationSettings: NSStackView {
     @objc private func toggleCombinedModulesPopup(_ sender: NSButton) {
         self.combinedModulesPopup = sender.state == NSControl.StateValue.on
         NotificationCenter.default.post(name: .combinedModulesPopup, object: nil, userInfo: nil)
+    }
+    
+    @objc private func toggleCombinedModulesAlternateDetails(_ sender: NSButton) {
+        self.combinedModulesAlternateDetails = sender.state == NSControl.StateValue.on
+        self.updateCombinedModulesSettings()
+    }
+    
+    private func setCombinedModulesModifierKeys(_ binding: [UInt16]) {
+        self.combinedModulesModifierKeys = binding
     }
     
     @objc private func toggleMenuBarPosition(_ sender: NSButton) {

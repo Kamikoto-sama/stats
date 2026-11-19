@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		4A05F9BD83C04F70BFFF7F37 /* Kit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369463B2B7EA4AF0A895A9B6 /* Kit.swift */; };
-		37C7116230001D83000FFAC5 /* bridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 37C7116130001D7D000FFAC5 /* bridge.h */; };
 		5C038CF62D86EE8A00516809 /* SystemStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C038CF52D86EE8700516809 /* SystemStats.swift */; };
 		5C044F7A2B3DE6F3005F6951 /* portal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C044F792B3DE6F3005F6951 /* portal.swift */; };
 		5C0A2A8A292A5B4D009B4C1F /* SMJobBlessUtil.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C0A2A89292A5B4D009B4C1F /* SMJobBlessUtil.py */; };
@@ -544,7 +543,6 @@
 		29AA17CA2926879000709C01 /* fa */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fa; path = fa.lproj/Localizable.strings; sourceTree = "<group>"; };
 		30370F8F253DCBC0006404D8 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		369463B2B7EA4AF0A895A9B6 /* Kit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kit.swift; sourceTree = "<group>"; };
-		37C7116130001D7D000FFAC5 /* bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bridge.h; sourceTree = "<group>"; };
 		40BE2B202745D63800AE9396 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/Localizable.strings; sourceTree = "<group>"; };
 		47665544298DC92F00F7B709 /* sk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sk; path = sk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4921436D25319699000A1C47 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -1237,7 +1235,6 @@
 		9A81C7572449A41400825D92 /* RAM */ = {
 			isa = PBXGroup;
 			children = (
-				37C7116130001D7D000FFAC5 /* bridge.h */,
 				9A81C7672449A43600825D92 /* main.swift */,
 				9A81C7682449A43600825D92 /* readers.swift */,
 				9AA6425F244B274200416A33 /* popup.swift */,
@@ -1466,7 +1463,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37C7116230001D83000FFAC5 /* bridge.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3173,7 +3169,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 3.0.24;
+				MARKETING_VERSION = 3.1.0;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.Stats;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3207,7 +3203,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 3.0.24;
+				MARKETING_VERSION = 3.1.0;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = eu.exelban.Stats;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3437,7 +3433,6 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = Modules/RAM/bridge.h;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -3473,7 +3468,6 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = Modules/RAM/bridge.h;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";

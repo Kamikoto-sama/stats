@@ -62,11 +62,6 @@ internal class UsageReader: Reader<RAM_Usage> {
             var pressureLevel: Int = 0
             sysctlbyname("kern.memorystatus_vm_pressure_level", &pressureLevel, &intSize, nil, 0)
 
-            var pressurePercent: UInt32 = 0
-            _ = withUnsafeMutablePointer(to: &pressurePercent) {
-                memorystatus_get_level(user_addr_t(UInt(bitPattern: $0)))
-            }
-            
             var pressureValue: RAMPressure
             switch pressureLevel {
             case 2: pressureValue = .warning
@@ -74,6 +69,14 @@ internal class UsageReader: Reader<RAM_Usage> {
             default: pressureValue = .normal
             }
             
+            var memoryLevel: Int32 = 0
+            var memoryLevelSize = MemoryLayout<Int32>.size
+            var pressurePercentage: Int? = nil
+            if sysctlbyname("kern.memorystatus_level", &memoryLevel, &memoryLevelSize, nil, 0) == 0,
+               memoryLevelSize == MemoryLayout<Int32>.size, (0...100).contains(memoryLevel) {
+                pressurePercentage = 100 - Int(memoryLevel)
+            }
+
             var stringSize: size_t = MemoryLayout<xsw_usage>.size
             var swap: xsw_usage = xsw_usage()
             sysctlbyname("vm.swapusage", &swap, &stringSize, nil, 0)
@@ -96,7 +99,7 @@ internal class UsageReader: Reader<RAM_Usage> {
                     used: Double(swap.xsu_used),
                     free: Double(swap.xsu_avail)
                 ),
-                pressure: Pressure(level: pressureLevel, value: pressureValue, percent: Int(100 - pressurePercent)),
+                pressure: Pressure(level: pressureLevel, value: pressureValue, percentage: pressurePercentage),
                 
                 swapins: swapins,
                 swapouts: swapouts
@@ -160,9 +163,10 @@ public class ProcessReader: Reader<[TopProcess]> {
         
         let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
         let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: outputData, encoding: .utf8)
+        // swiftlint:disable:next optional_data_string_conversion
+        let output = String(decoding: outputData, as: UTF8.self)
         _ = String(data: errorData, encoding: .utf8)
-        guard let output, !output.isEmpty else { return }
+        guard !output.isEmpty else { return }
         
         var processes: [TopProcess] = []
         output.enumerateLines { (line, _) in
